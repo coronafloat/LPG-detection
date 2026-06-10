@@ -1,0 +1,65 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Streamlit local files and secrets
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# YOLO, model, and training artifacts
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.mlmodel
+runs/
+weights/
+models/
+
+# Dataset and uploaded media artifacts
+datasets/
+data/
+uploads/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.webp
+
+# Local temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
