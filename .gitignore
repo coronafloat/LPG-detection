@@ -27,7 +27,6 @@ ENV/
 !.env.example
 
 # YOLO, model, and training artifacts
-*.pt
 *.pth
 *.onnx
 *.engine
