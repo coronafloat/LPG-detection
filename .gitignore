@@ -35,7 +35,6 @@ ENV/
 *.mlmodel
 runs/
 weights/
-models/
 
 # Dataset and uploaded media artifacts
 datasets/
