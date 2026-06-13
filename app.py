@@ -104,7 +104,7 @@ r_y2 = st.sidebar.slider("Y2 Position (Bottom)", 0, 480, 400)
 st.sidebar.markdown("---")
 with st.sidebar.expander("Authors"):
     st.markdown("""
-    - Christine Dewi Ph.D.
+    - Christine Dewi, Ph.D.
     - Emmanuel Manggala Nusa
     - Cindy Cahya Juliandani
     - Ellena Putri Permana
