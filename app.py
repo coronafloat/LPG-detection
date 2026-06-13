@@ -3,14 +3,36 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import tempfile
+from pathlib import Path
 
 from lpg_detection.frame_processor import process_frame
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PRESETS = {
+    "YOLO12s Original": BASE_DIR / "models" / "yolo12s_original" / "best.pt",
+    "YOLO12s CLAHE": BASE_DIR / "models" / "yolo12s_clahe" / "best.pt",
+}
+
+
+@st.cache_resource(show_spinner=False)
+def load_model_from_path(model_path):
+    return YOLO(model_path)
+
+
+@st.cache_resource(show_spinner=False)
+def load_model_from_upload(file_name, file_bytes):
+    # Save the uploaded model to a temporary file so YOLO can read its path.
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pt') as tmp_file:
+        tmp_file.write(file_bytes)
+        model_path = tmp_file.name
+
+    return YOLO(model_path)
 
 # ==========================================
 # 1. GUI & SIDEBAR CONFIGURATION
 # ==========================================
 
-st.set_page_config(page_title="LPG Gas Detection - YOLOv11", layout="wide")
+st.set_page_config(page_title="LPG Gas Detection - YOLOv12", layout="wide")
 
 st.title("LPG Gas Detection & Counting System")
 st.markdown("Object Detection, Region Counting, & Enhancement")
@@ -18,24 +40,47 @@ st.markdown("Object Detection, Region Counting, & Enhancement")
 # --- Sidebar Control Panel ---
 st.sidebar.header("System Settings")
 
-# Upload Model
-uploaded_model_file = st.sidebar.file_uploader("Upload Model (.pt)", type=['pt'])
-model = None 
+# Model selection
+model = None
+selected_model_label = None
+model_source = st.sidebar.radio(
+    "Model Source",
+    ["Preset Model", "Upload Custom Model"],
+)
 
-if uploaded_model_file is not None:
-    # Save the uploaded model to a temporary file so YOLO can read its path.
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pt') as tmp_file:
-        tmp_file.write(uploaded_model_file.read())
-        model_path = tmp_file.name
+if model_source == "Preset Model":
+    selected_model_label = st.sidebar.selectbox(
+        "Select Model:",
+        list(MODEL_PRESETS.keys()),
+    )
+    selected_model_path = MODEL_PRESETS[selected_model_label]
 
-    try:
-        # Load the model from the temporary path.
-        model = YOLO(model_path)
-        st.sidebar.success(f"Model '{uploaded_model_file.name}' loaded successfully!")
-    except Exception as e:
-        st.sidebar.error(f"Error loading model: {e}")
+    if selected_model_path.exists():
+        try:
+            model = load_model_from_path(str(selected_model_path))
+            st.sidebar.success(f"Model '{selected_model_label}' loaded successfully!")
+        except Exception as e:
+            st.sidebar.error(f"Error loading model: {e}")
+    else:
+        st.sidebar.warning(
+            "Model file not found. Place the model at: "
+            f"`{selected_model_path.relative_to(BASE_DIR)}`"
+        )
 else:
-    st.sidebar.warning("Please upload a .pt model file to get started.")
+    uploaded_model_file = st.sidebar.file_uploader("Upload Model (.pt)", type=['pt'])
+
+    if uploaded_model_file is not None:
+        try:
+            model = load_model_from_upload(
+                uploaded_model_file.name,
+                uploaded_model_file.getvalue(),
+            )
+            selected_model_label = uploaded_model_file.name
+            st.sidebar.success(f"Model '{uploaded_model_file.name}' loaded successfully!")
+        except Exception as e:
+            st.sidebar.error(f"Error loading model: {e}")
+    else:
+        st.sidebar.warning("Please upload a .pt model file to get started.")
     
 # Enhancement selection
 enhancement_option = st.sidebar.selectbox(
@@ -73,6 +118,8 @@ st.sidebar.caption("© 2026 Fakultas Teknologi Informasi Universitas Kristen Sat
 # ==========================================
 
 if model is not None:
+    st.caption(f"Active model: {selected_model_label}")
+
     tab1, tab2 = st.tabs(["Image Detection", "Video Detection"])
 
     # --- TAB 1: IMAGE ---
@@ -155,4 +202,4 @@ if model is not None:
                 
             cap.release()
 else:
-    st.info("Hello! Please upload a .pt model file from the left sidebar to get started.")
+    st.info("Hello! Please select an available preset model or upload a .pt model file from the left sidebar to get started.")
